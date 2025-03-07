@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const tabContent = [
   { title: "Placeholder title for Tab 1", text: "Placeholder text for Tab 1", video: "video1.mp4", thumbnail: "thumbnail1.jpg", date: "February 1, 2025 at 10:00AM" },
@@ -28,15 +28,33 @@ const tabContent = [
 
 export default function Home() {
   const [selectedTab, setSelectedTab] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showContent, setShowContent] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setShowContent(false);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleTabClick = (tabIndex) => {
     setSelectedTab(tabIndex);
+    if (isMobile) setShowContent(true);
+  };
+
+  const handleBack = () => {
+    setShowContent(false);
   };
 
   return (
     <div className="flex min-h-screen">
       {/* Left Section: Tabs */}
-      <div className="w-1/4 bg-neutral-800 text-white overflow-y-auto h-screen border-r-2 border-black border">
+      {!isMobile || !showContent ? (
+      <div className={`${isMobile ? "w-full" : "w-1/4"} w-1/4 bg-neutral-800 text-white overflow-y-auto h-screen border-r-2 border-black border`}>
         <h1 className={`sticky top-0 border-b border-gray-700 px-4 w-full flex mx-auto text-left py-2 font-semibold bg-neutral-800 z-10 opacity-97`}>Previous 30 Days</h1>
         <div className="flex flex-col w-full">
           {tabContent.map((tab, i) => (
@@ -55,8 +73,10 @@ export default function Home() {
           ))}
         </div>
       </div>
+      ) : null}
 
       {/* Right Section: Content */}
+      {!isMobile && (
       <div className="w-3/4 bg-neutral-900 text-white">
         <div className="p-4">
           <h2 className="mb-2 text-sm text-center text-gray-500" style={{ fontFamily: "'SF Pro Display', sans-serif" }}>
@@ -68,17 +88,34 @@ export default function Home() {
               <div className="px-4 rounded">
                 <h3 className="text-lg font-extrabold" style={{ fontFamily: "'SF Pro Display', sans-serif" }}>{tabContent[selectedTab].title}</h3>
               </div>
-              <div className="mb-4 px-4 rounded" style={{ fontFamily: "'SF Pro Display', sans-serif" }}>
-                {tabContent[selectedTab].text}
-              </div>
               <video controls className="w-full h-auto px-4" poster={tabContent[selectedTab].thumbnail}>
                 <source src={tabContent[selectedTab].video} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
+              <div className="bg-neutral-800 p-4 pb-10 rounded-lg text-white my-4" style={{ fontFamily: "'SF Pro Display', sans-serif" }}>
+                {tabContent[selectedTab].text}
+              </div>
             </>
           )}
         </div>
       </div>
+      )}
+
+      {/* Mobile View */}
+      {isMobile && showContent && (
+        <div className="w-full bg-neutral-900 text-white p-4">
+          <button onClick={handleBack} className="mb-4 px-4 py-2 bg-fuchsia-400 text-white rounded-lg">Back</button>
+          <h2 className="mb-2 text-sm text-center text-gray-500">
+            {tabContent[selectedTab].date} - View Only
+          </h2>
+          <h3 className="text-lg font-extrabold">{tabContent[selectedTab].title}</h3>
+          <video controls className="mt-5 w-full h-auto" poster={tabContent[selectedTab].thumbnail}>
+            <source src={tabContent[selectedTab].video} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <div className="bg-neutral-800 p-4 pb-10 rounded-lg text-white my-4">{tabContent[selectedTab].text}</div>
+        </div>
+      )}
     </div>
   );
 }
